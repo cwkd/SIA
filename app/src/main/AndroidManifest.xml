@@ -14,12 +14,15 @@
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.full" />
     <uses-feature android:name="android.hardware.location.gps" />
+
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-    <supports-screens android:largeScreens="true"
+    <supports-screens
+        android:largeScreens="true"
         android:normalScreens="true"
-        android:smallScreens="true" android:xlargeScreens="true"/>
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
 
     <application
         android:allowBackup="true"
@@ -42,6 +45,7 @@
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_camera"
             android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -50,14 +54,26 @@
         <activity
             android:name=".FullscreenActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="landscape"
             android:label="@string/title_activity_fullscreen"
             android:parentActivityName=".MainActivity"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.daniel.sia.MainActivity" />
+            <meta-data
+                android:name="android.support.v4.content.FileProvider"
+                android:resource="@xml/file_paths" />
         </activity>
+        <activity
+            android:name=".ImageVerificationActivity"
+            android:parentActivityName=".CameraActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.daniel.sia.CameraActivity" />
+        </activity>
+        <activity android:name=".VolumeActivity"></activity>
     </application>
 
 </manifest>

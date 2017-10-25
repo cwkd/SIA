@@ -1,18 +1,20 @@
 package com.example.daniel.sia;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 
 import android.widget.FrameLayout;
@@ -22,11 +24,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import static android.R.attr.data;
-
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -37,24 +37,21 @@ public class CameraActivity extends AppCompatActivity {
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
      */
-    private static final boolean AUTO_HIDE = true;
 
     /**
      * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
      * user interaction before hiding the system UI.
      */
-    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
 
     /**
      * Some older devices needs a small delay between UI widget updates
      * and a change of the status and navigation bar.
      */
-    private static final int UI_ANIMATION_DELAY = 300;
-    private final Handler mHideHandler = new Handler();
 
     private Camera mCamera;
     private CamPreview mPreview;
     private File pictureFile;
+    private Uri pictureUri;
 
     private FrameLayout previewFrame;
     private Handler mCamPermissionsHandler = new Handler();
@@ -62,25 +59,31 @@ public class CameraActivity extends AppCompatActivity {
 
     int cameraPermissionCheck;
     int filePermissionCheck;
-
+    int currentImageCount;
+    int accessPermissionCheck;
 
     private static final String TAG = "CameraActivity";
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;  // For our internal use
     private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 101; // For our internal use
     private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 102; // For out internal use
-
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
+
+    private static final int OBJECT_LENGTH = 01;
+    private static final int OBJECT_BASE = 02;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_camera);
-        ActionBar actionBar = getSupportActionBar();
+
+        Intent intent = getIntent();
+        currentImageCount = intent.getIntExtra("ImageNum", OBJECT_LENGTH);
+
+/*        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
-        }
+        }*/
         mCamPermissionsHandler.postDelayed(new Runnable() {
             public void run() {
                 createCamPreview();
@@ -89,26 +92,37 @@ public class CameraActivity extends AppCompatActivity {
         mFilePermissionsHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                createFileLccation();
+                getFileWritePermissions();
             }
-        }, 1);
+        }, 2);
     }
 
-    public void createFileLccation() {
+    public void getFileReadPermissions() {
+        accessPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (accessPermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_EXTERNAL_STORAGE_REQUEST_CODE);
+        }
+    }
+
+    public void getFileWritePermissions() {
         filePermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (filePermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
         }
-        //pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
     }
 
-    public void createCamPreview() {
+    public void getCameraPermissions() {
         if (checkCameraHardware(this)) {
             cameraPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.CAMERA);
             if (cameraPermissionCheck != PackageManager.PERMISSION_GRANTED
                     && Build.VERSION.SDK_INT >= 23) {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
             }
+        }
+    }
+
+    public void createCamPreview() {
+        getCameraPermissions();
             mCamera = getCameraInstance();
             if (mCamera != null) {
                 mPreview = new CamPreview(this, mCamera);
@@ -116,7 +130,6 @@ public class CameraActivity extends AppCompatActivity {
                 previewFrame.addView(mPreview);
             }
         }
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -145,21 +158,57 @@ public class CameraActivity extends AppCompatActivity {
         }
     }
 
-    public static Camera getCameraInstance(){
+    public static void setCameraDisplayOrientation(Activity activity, int cameraId, android.hardware.Camera camera) {
+        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
+    }
+
+    public Camera getCameraInstance(){
         Camera c = null;
         try {
-            c = Camera.open(); // attempt to get a Camera instance
+            c = Camera.open(Camera.CameraInfo.CAMERA_FACING_BACK); // attempt to get a back-facing Camera instance
         }
         catch (Exception e){
             // Camera is not available (in use or does not exist)
+        }
+        if (c != null) {
+            setCameraDisplayOrientation(this, Camera.CameraInfo.CAMERA_FACING_BACK, c);
         }
         return c; // returns null if camera is unavailable
     }
 
     public void captureButton(View view) {
         try {
+            Camera.Parameters parameters = mCamera.getParameters();
+            parameters.setRotation(0);
+            mCamera.setParameters(parameters);
             mCamera.takePicture(null, null, captureCallback);
-            Toast.makeText(this, "Image Captured", Toast.LENGTH_SHORT);
+            Toast.makeText(this, "Image Captured", Toast.LENGTH_SHORT).show();
         } catch(Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -173,8 +222,6 @@ public class CameraActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        previewFrame = (FrameLayout) findViewById(R.id.fullscreen_content);
-        previewFrame.removeAllViews();
         mCamera = getCameraInstance();
         if (mCamera != null) {
             mPreview = new CamPreview(this, mCamera);
@@ -216,7 +263,7 @@ public class CameraActivity extends AppCompatActivity {
         File mediaFile;
         if (type == MEDIA_TYPE_IMAGE){
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".jpeg");
+                    "IMG_"+ timeStamp + ".jpg");
         } else if(type == MEDIA_TYPE_VIDEO) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
                     "VID_"+ timeStamp + ".mp4");
@@ -232,6 +279,7 @@ public class CameraActivity extends AppCompatActivity {
         public void onPictureTaken(byte[] bytes, Camera camera) {
             try {
                 pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+                pictureUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
                 if (pictureFile == null) {
                     Log.d(TAG, "Error creating media file, check storage permissions: ");
                     return;
@@ -239,10 +287,9 @@ public class CameraActivity extends AppCompatActivity {
             } catch (IOException ex) {
                 return;
             }
-
             try {
-                FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(data);
+                OutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(bytes);
                 fos.flush();
                 fos.close();
             } catch (FileNotFoundException e) {
@@ -250,6 +297,23 @@ public class CameraActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.d(TAG, "Error accessing file: " + e.getMessage());
             }
+
+            Intent intent = new Intent(getBaseContext(), ImageVerificationActivity.class);
+            intent.putExtra("pictureUri", pictureUri);
+            if (currentImageCount == OBJECT_LENGTH) {
+                intent.putExtra("ImageNum", OBJECT_LENGTH);
+            } else if (currentImageCount == OBJECT_BASE)
+                intent.putExtra("ImageNum", OBJECT_BASE);
+            getFileReadPermissions();
+            startActivity(intent);
+            finish();
         }
     };
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+        finish();
+    }
 }

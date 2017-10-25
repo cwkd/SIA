@@ -1,10 +1,16 @@
 <resources>
     <string name="app_name">SIA</string>
 
+    <string name="title_activity_fullscreen">FullscreenActivity</string>
+    <string name="fullscreen_activity_button">Capture Image</string>
+
     <string name="title_activity_camera">CameraActivity</string>
     <string name="camera_activity_button">Take a Picture</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
 
-    <string name="title_activity_fullscreen">FullscreenActivity</string>
-    <string name="dummy_button">Capture Image</string>
+    <string name="retry_button">RETRY</string>
+    <string name="accept_button">ACCEPT</string>
+
+
+
+    <string name="main_button">Back to start</string>
 </resources>
