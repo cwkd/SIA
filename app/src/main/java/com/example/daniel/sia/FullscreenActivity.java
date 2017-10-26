@@ -5,7 +5,6 @@ import android.annotation.SuppressLint;
 import android.content.pm.ActivityInfo;
 
 import android.content.res.Configuration;
-import android.graphics.drawable.GradientDrawable;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Environment;
@@ -184,7 +183,7 @@ public class FullscreenActivity extends AppCompatActivity implements CameraBridg
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        findViewById(R.id.capture_image_button).setOnTouchListener(mDelayHideTouchListener);
     }
 
     @Override

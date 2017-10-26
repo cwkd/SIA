@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.support.v4.content.ContextCompat;
@@ -57,10 +58,12 @@ public class CameraActivity extends AppCompatActivity {
     private Handler mCamPermissionsHandler = new Handler();
     private Handler mFilePermissionsHandler = new Handler();
 
-    int cameraPermissionCheck;
-    int filePermissionCheck;
-    int currentImageCount;
-    int accessPermissionCheck;
+    private int cameraPermissionCheck;
+    private int fileWritePermissionCheck;
+    private int fileReadPermissionCheck;
+    private int currentImageCount;
+
+    private boolean deletePreviousImage;
 
     private static final String TAG = "CameraActivity";
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;  // For our internal use
@@ -79,7 +82,11 @@ public class CameraActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         currentImageCount = intent.getIntExtra("ImageNum", OBJECT_LENGTH);
-
+        deletePreviousImage = intent.getBooleanExtra("deletePrevious", false);
+        if (deletePreviousImage) {
+            pictureUri = intent.getParcelableExtra("deleteFile");
+            new DeleteTask().execute(pictureUri);
+        }
 /*        ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -98,15 +105,15 @@ public class CameraActivity extends AppCompatActivity {
     }
 
     public void getFileReadPermissions() {
-        accessPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (accessPermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
+        fileReadPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (fileReadPermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_EXTERNAL_STORAGE_REQUEST_CODE);
         }
     }
 
     public void getFileWritePermissions() {
-        filePermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (filePermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
+        fileWritePermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (fileWritePermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
         }
     }
@@ -315,5 +322,36 @@ public class CameraActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private class DeleteTask extends AsyncTask<Uri, Integer, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Uri... uris) {
+            File deleteCandidate = new File(uris[0].getPath());
+            if (deleteCandidate.exists()){
+                if (deleteCandidate.delete()){
+                    Log.d(TAG, "File Deleted");
+                    return true;
+                } else {
+                    Log.d(TAG, "Delete Failed");
+                }
+            }
+            return false;
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... progress) {
+            setProgress(progress[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                Toast.makeText(getBaseContext(), "File Delete Successful", Toast.LENGTH_SHORT);
+            } else {
+                Toast.makeText(getBaseContext(), "File Delete Failed", Toast.LENGTH_SHORT);
+            }
+        }
     }
 }

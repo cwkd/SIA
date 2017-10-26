@@ -94,12 +94,14 @@ public class ImageVerificationActivity extends AppCompatActivity {
         } else if (currentImageCount == OBJECT_BASE) {
             intent.putExtra("ImageNum", OBJECT_BASE);
         }
-        File deleteFile = new File(String.valueOf(pictureUri));
+        /*File deleteFile = new File(String.valueOf(pictureUri));
         getFileWritePermissions();
         if (deleteFile.exists()) {
             getBaseContext().deleteFile(deleteFile.getAbsolutePath());
             Log.d(TAG, deleteFile.getAbsolutePath());
-        }
+        }*/
+        intent.putExtra("deletedFile", pictureUri);
+        intent.putExtra("deletePrevious", true);
         startActivity(intent);
         finish();
     }
