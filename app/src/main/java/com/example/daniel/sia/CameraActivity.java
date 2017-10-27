@@ -95,10 +95,6 @@ public class CameraActivity extends AppCompatActivity {
             pictureUri = intent.getParcelableExtra("deleteFile");
             new DeleteTask().execute(pictureUri);
         }
-/*        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }*/
         createCamPreview();
     }
 

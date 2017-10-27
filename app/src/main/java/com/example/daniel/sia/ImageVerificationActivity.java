@@ -25,9 +25,7 @@ import java.util.Date;
 
 public class ImageVerificationActivity extends AppCompatActivity {
 
-    private File pictureFile;
     public Uri pictureUri;
-    public Bitmap bitmap;
 
     private int batchNum;
     private boolean isStackable;
@@ -35,8 +33,6 @@ public class ImageVerificationActivity extends AppCompatActivity {
     private int numOfCargo;
     private int cargoRemaining;
     private int currentImageCount;
-
-    ImageView imageView;
 
     private static final String TAG = "ImageVerActivity";
     private static final int OBJECT_LENGTH = 01;
@@ -65,8 +61,8 @@ public class ImageVerificationActivity extends AppCompatActivity {
             Toast.makeText(getBaseContext(), "Object base taken", Toast.LENGTH_SHORT).show();
         }
 
-        imageView = (ImageView) findViewById(R.id.image_preview_view);
-        bitmap = getBitmap(pictureUri);
+        ImageView imageView = (ImageView) findViewById(R.id.image_preview_view);
+        Bitmap bitmap = getBitmap(pictureUri);
         imageView.setImageBitmap(bitmap);
         imageView.setRotation(90);
     }
@@ -181,7 +177,11 @@ public class ImageVerificationActivity extends AppCompatActivity {
 
     private void saveCannyImage(Uri uri) {
         Bitmap bitmap = ImageProcessor.getBitmapFromFile(uri);
-        Utils.matToBitmap(ImageProcessor.getCannyImage(bitmap), bitmap);
+        try {
+            Utils.matToBitmap(ImageProcessor.getCannyImage(bitmap), bitmap);
+        } catch (Exception e) {
+            return;
+        }
         File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         if (pictureFile == null) {
             Log.d(TAG, "Error creating media file, check storage permissions: ");
@@ -203,7 +203,7 @@ public class ImageVerificationActivity extends AppCompatActivity {
     private void saveBoxImage(Uri uri){
         Bitmap bitmap = ImageProcessor.getBitmapFromFile(uri);
         Utils.matToBitmap(ImageProcessor.getContoursImage(bitmap), bitmap);
-        pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         if (pictureFile == null) {
             Log.d(TAG, "Error creating media file, check storage permissions: ");
             return;
@@ -218,6 +218,15 @@ public class ImageVerificationActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.d(TAG, "Error accessing file: " + e.getMessage());
             }
+        }
+    }
+
+    private double[] getDimensions(Uri uri) {
+        Bitmap bitmap = ImageProcessor.getBitmapFromFile(uri);
+        try {
+            return ImageProcessor.getDimensions(bitmap);
+        } catch (Exception e) {
+            return null;
         }
     }
 

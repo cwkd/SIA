@@ -165,23 +165,27 @@ public class ImageProcessor {
             }
         }
         // get dimensions of reference object
-        RotatedRect referenceObject = listOfRotatedRekts.get(0);
-        Point[] refObjPoints = new Point[4];
-        referenceObject.points(refObjPoints);
-        Point tltrMid = getMidpoint(refObjPoints[0], refObjPoints[3]);
-        Point blbrMid = getMidpoint(refObjPoints[1], refObjPoints[2]);
-        Point tlblMid = getMidpoint(refObjPoints[0], refObjPoints[1]);
-        Point trbrMid = getMidpoint(refObjPoints[3], refObjPoints[2]);
-        double dL = getDist(tltrMid, blbrMid);
-        double dS = getDist(tlblMid, trbrMid);
-        double pixelPerMetric = dS / 210;
-        //double dimL = dL / pixelPerMetric;
-        //double dimS = dS / pixelPerMetric;
+        try {
+            RotatedRect referenceObject = listOfRotatedRekts.get(0);
+            Point[] refObjPoints = new Point[4];
+            referenceObject.points(refObjPoints);
+            Point tltrMid = getMidpoint(refObjPoints[0], refObjPoints[3]);
+            Point blbrMid = getMidpoint(refObjPoints[1], refObjPoints[2]);
+            Point tlblMid = getMidpoint(refObjPoints[0], refObjPoints[1]);
+            Point trbrMid = getMidpoint(refObjPoints[3], refObjPoints[2]);
+            double dL = getDist(tltrMid, blbrMid);
+            double dS = getDist(tlblMid, trbrMid);
+            double pixelPerMetric = dS / 210;
+            //double dimL = dL / pixelPerMetric;
+            //double dimS = dS / pixelPerMetric;
 
-        RotatedRect measuredObject = listOfRotatedRekts.get(1);
-        double height = measuredObject.size.height / pixelPerMetric;
-        double width = measuredObject.size.width / pixelPerMetric;
-        return new double[]{height, width};
+            RotatedRect measuredObject = listOfRotatedRekts.get(1);
+            double height = measuredObject.size.height / pixelPerMetric;
+            double width = measuredObject.size.width / pixelPerMetric;
+            return new double[]{height, width};
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static Mat getContoursImage(Bitmap bitmap) {
@@ -229,22 +233,26 @@ public class ImageProcessor {
             }
         }
         // get dimensions of reference object
-        RotatedRect referenceObject = listOfRotatedRekts.get(0);
-        Point[] refObjPoints = new Point[4];
-        referenceObject.points(refObjPoints);
-        Point tltrMid = getMidpoint(refObjPoints[0], refObjPoints[3]);
-        Point blbrMid = getMidpoint(refObjPoints[1], refObjPoints[2]);
-        Point tlblMid = getMidpoint(refObjPoints[0], refObjPoints[1]);
-        Point trbrMid = getMidpoint(refObjPoints[3], refObjPoints[2]);
-        double dL = getDist(tltrMid, blbrMid);
-        double dS = getDist(tlblMid, trbrMid);
-        double pixelPerMetric = dS / 210;
-        //double dimL = dL / pixelPerMetric;
-        //double dimS = dS / pixelPerMetric;
+        try {
+            RotatedRect referenceObject = listOfRotatedRekts.get(0);
+            Point[] refObjPoints = new Point[4];
+            referenceObject.points(refObjPoints);
+            Point tltrMid = getMidpoint(refObjPoints[0], refObjPoints[3]);
+            Point blbrMid = getMidpoint(refObjPoints[1], refObjPoints[2]);
+            Point tlblMid = getMidpoint(refObjPoints[0], refObjPoints[1]);
+            Point trbrMid = getMidpoint(refObjPoints[3], refObjPoints[2]);
+            double dL = getDist(tltrMid, blbrMid);
+            double dS = getDist(tlblMid, trbrMid);
+            double pixelPerMetric = dS / 210;
+            //double dimL = dL / pixelPerMetric;
+            //double dimS = dS / pixelPerMetric;
 
-        RotatedRect measuredObject = listOfRotatedRekts.get(1);
-        double height = measuredObject.size.height / pixelPerMetric;
-        double width = measuredObject.size.width / pixelPerMetric;
-        return mContours;
+            RotatedRect measuredObject = listOfRotatedRekts.get(1);
+            double height = measuredObject.size.height / pixelPerMetric;
+            double width = measuredObject.size.width / pixelPerMetric;
+            return mContours;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
