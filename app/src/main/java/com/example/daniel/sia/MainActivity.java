@@ -9,8 +9,11 @@ import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.CheckBox;
+import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,6 +21,17 @@ public class MainActivity extends AppCompatActivity {
     private static final int OBJECT_LENGTH = 01;
 
     private Handler mRuntimePermissionsHandler = new Handler();
+
+    private EditText batchNumEditText;
+    private EditText cargoNumEditText;
+    private CheckBox stackableCheckBox;
+    private CheckBox tiltableCheckBox;
+
+    private boolean isStackable;
+    private boolean isTiltable;
+    private int numOfCargo;
+    private int cargoRemaining;
+    private int batchNum;
 
     private int fileReadPermissionCheck;
     private int fileWritePermissionCheck;
@@ -27,11 +41,6 @@ public class MainActivity extends AppCompatActivity {
     private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 101; // For our internal use
     private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 102; // For out internal use
 
-    // Used to load the 'native-lib' library on application startup.
-    static {
-        System.loadLibrary("native-lib");
-
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +48,46 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+        batchNumEditText = (EditText)findViewById(R.id.batch_num_edit_text);
+        cargoNumEditText = (EditText)findViewById(R.id.cargo_num_edit_text);
+        stackableCheckBox = (CheckBox)findViewById(R.id.stackable_check_box);
+        tiltableCheckBox = (CheckBox)findViewById(R.id.tiltable_check_box);
+        /*batchNumEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable != null) {
+                    batchNum = Integer.valueOf(String.valueOf(editable));
+                }
+            }
+        });
+        cargoNumEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (editable != null) {
+                    numOfCargo = Integer.getInteger(String.valueOf(editable));
+                }
+            }
+        });*/
 
         mRuntimePermissionsHandler.postDelayed(new Runnable() {
             @Override
@@ -50,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 getFileWritePermissions();
                 getFileReadPermissions();
             }
-        }, 5);
+        }, 100);
     }
 
     public void getFileReadPermissions() {
@@ -98,7 +144,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void cameraActivity(View view) {
         Intent intent = new Intent(this, CameraActivity.class);
+        batchNumEditText = (EditText)findViewById(R.id.batch_num_edit_text);
+        cargoNumEditText = (EditText)findViewById(R.id.cargo_num_edit_text);
+        Editable temp = batchNumEditText.getText();
+        batchNum = Integer.valueOf(String.valueOf(temp));
+        intent.putExtra("batchNum", batchNum);
         intent.putExtra("ImageNum", OBJECT_LENGTH);
+        temp = cargoNumEditText.getText();
+        numOfCargo = Integer.valueOf(String.valueOf(temp));
+        intent.putExtra("numOfCargo", numOfCargo);
+        intent.putExtra("cargoRemaining", numOfCargo);
+        intent.putExtra("isTiltable", tiltableCheckBox.isChecked());
+        intent.putExtra("isStackable", stackableCheckBox.isChecked());
         startActivity(intent);
         finish();
     }
@@ -108,10 +165,4 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public native String stringFromJNI();
 }

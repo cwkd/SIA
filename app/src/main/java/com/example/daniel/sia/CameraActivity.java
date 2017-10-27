@@ -5,7 +5,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -55,20 +58,18 @@ public class CameraActivity extends AppCompatActivity {
     private Uri pictureUri;
 
     private FrameLayout previewFrame;
-    private Handler mCamPermissionsHandler = new Handler();
-    private Handler mFilePermissionsHandler = new Handler();
 
-    private int cameraPermissionCheck;
-    private int fileWritePermissionCheck;
-    private int fileReadPermissionCheck;
+    private boolean isStackable;
+    private boolean isTiltable;
+    private int numOfCargo;
+    private int cargoRemaining;
     private int currentImageCount;
+    private int batchNum;
 
     private boolean deletePreviousImage;
 
     private static final String TAG = "CameraActivity";
-    private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;  // For our internal use
-    private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 101; // For our internal use
-    private static final int READ_EXTERNAL_STORAGE_REQUEST_CODE = 102; // For out internal use
+
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static final int MEDIA_TYPE_VIDEO = 2;
 
@@ -81,6 +82,13 @@ public class CameraActivity extends AppCompatActivity {
         setContentView(R.layout.activity_camera);
 
         Intent intent = getIntent();
+
+        isStackable = intent.getBooleanExtra("isStackable", false);
+        isTiltable = intent.getBooleanExtra("isTiltable", false);
+        numOfCargo = intent.getIntExtra("numOfCargo", 0);
+        cargoRemaining = intent.getIntExtra("cargoRemaining", 0);
+        batchNum = intent.getIntExtra("batchNum", 123456);
+
         currentImageCount = intent.getIntExtra("ImageNum", OBJECT_LENGTH);
         deletePreviousImage = intent.getBooleanExtra("deletePrevious", false);
         if (deletePreviousImage) {
@@ -91,65 +99,17 @@ public class CameraActivity extends AppCompatActivity {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }*/
-        mCamPermissionsHandler.postDelayed(new Runnable() {
-            public void run() {
-                createCamPreview();
-            }
-        }, 1);
-        mFilePermissionsHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                getFileWritePermissions();
-            }
-        }, 2);
-    }
-
-    public void getFileReadPermissions() {
-        fileReadPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (fileReadPermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, READ_EXTERNAL_STORAGE_REQUEST_CODE);
-        }
-    }
-
-    public void getFileWritePermissions() {
-        fileWritePermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        if (fileWritePermissionCheck != PackageManager.PERMISSION_GRANTED && Build.VERSION.SDK_INT >= 23) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
-        }
-    }
-
-    public void getCameraPermissions() {
-        if (checkCameraHardware(this)) {
-            cameraPermissionCheck = ContextCompat.checkSelfPermission(this.getBaseContext(), Manifest.permission.CAMERA);
-            if (cameraPermissionCheck != PackageManager.PERMISSION_GRANTED
-                    && Build.VERSION.SDK_INT >= 23) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA}, CAMERA_CAPTURE_IMAGE_REQUEST_CODE);
-            }
-        }
+        createCamPreview();
     }
 
     public void createCamPreview() {
-        getCameraPermissions();
+        if (checkCameraHardware(this)) {
             mCamera = getCameraInstance();
             if (mCamera != null) {
                 mPreview = new CamPreview(this, mCamera);
                 previewFrame = (FrameLayout) findViewById(R.id.fullscreen_content);
                 previewFrame.addView(mPreview);
             }
-        }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case CAMERA_CAPTURE_IMAGE_REQUEST_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                }
-
-            case WRITE_EXTERNAL_STORAGE_REQUEST_CODE:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                }
         }
     }
 
@@ -239,16 +199,11 @@ public class CameraActivity extends AppCompatActivity {
 
     /** Create a file Uri for saving an image or video */
     private static Uri getOutputMediaFileUri(int type) {
-        try {
-            return Uri.fromFile(getOutputMediaFile(type));
-        } catch (IOException ex) {
-            Log.d(TAG, ex.getMessage());
-        }
-        return null;
+        return Uri.fromFile(getOutputMediaFile(type));
     }
 
     /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(int type) throws IOException {
+    private static File getOutputMediaFile(int type) {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -261,7 +216,6 @@ public class CameraActivity extends AppCompatActivity {
         if (! mediaStorageDir.exists()){
             if (! mediaStorageDir.mkdirs()){
                 Log.d("MyCameraApp", "failed to create directory");
-                throw new IOException("failed to create directory");
             }
         }
 
@@ -284,14 +238,10 @@ public class CameraActivity extends AppCompatActivity {
     Camera.PictureCallback captureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] bytes, Camera camera) {
-            try {
-                pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-                pictureUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
-                if (pictureFile == null) {
-                    Log.d(TAG, "Error creating media file, check storage permissions: ");
-                    return;
-                }
-            } catch (IOException ex) {
+            pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            pictureUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
+            if (pictureFile == null || pictureUri == null) {
+                Log.d(TAG, "Error creating media file, check storage permissions: ");
                 return;
             }
             try {
@@ -304,18 +254,25 @@ public class CameraActivity extends AppCompatActivity {
             } catch (IOException e) {
                 Log.d(TAG, "Error accessing file: " + e.getMessage());
             }
-
-            Intent intent = new Intent(getBaseContext(), ImageVerificationActivity.class);
-            intent.putExtra("pictureUri", pictureUri);
-            if (currentImageCount == OBJECT_LENGTH) {
-                intent.putExtra("ImageNum", OBJECT_LENGTH);
-            } else if (currentImageCount == OBJECT_BASE)
-                intent.putExtra("ImageNum", OBJECT_BASE);
-            getFileReadPermissions();
-            startActivity(intent);
-            finish();
+            verifyImage();
         }
     };
+
+    public void verifyImage() {
+        Intent intent = new Intent(getBaseContext(), ImageVerificationActivity.class);
+        intent.putExtra("batchNum", batchNum);
+        intent.putExtra("isStackable", isStackable);
+        intent.putExtra("isTiltable", isTiltable);
+        intent.putExtra( "numOfCargo", numOfCargo);
+        intent.putExtra("cargoRemaining", cargoRemaining);
+        intent.putExtra("pictureUri", pictureUri);
+        if (currentImageCount == OBJECT_LENGTH) {
+            intent.putExtra("ImageNum", OBJECT_LENGTH);
+        } else if (currentImageCount == OBJECT_BASE)
+            intent.putExtra("ImageNum", OBJECT_BASE);
+        startActivity(intent);
+        finish();
+    }
 
     @Override
     public void onBackPressed() {
@@ -353,5 +310,29 @@ public class CameraActivity extends AppCompatActivity {
                 Toast.makeText(getBaseContext(), "File Delete Failed", Toast.LENGTH_SHORT);
             }
         }
+    }
+
+    private Bitmap checkRotation(String filePath, Bitmap scaledBitmap) {
+        ExifInterface exif;
+        try {
+            exif = new ExifInterface(filePath);
+            int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,0);
+            Log.d("EXIF", "Exif: " + orientation);
+            Matrix matrix = new Matrix();
+            if (orientation == 6) {
+                matrix.postRotate(90);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 3) {
+                matrix.postRotate(180);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 8) {
+                matrix.postRotate(270);
+                Log.d("EXIF", "Exif: " + orientation);
+            }
+            scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return scaledBitmap;
     }
 }

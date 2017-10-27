@@ -4,8 +4,13 @@
     <string name="title_activity_fullscreen">FullscreenActivity</string>
     <string name="fullscreen_activity_button">Capture Image</string>
 
+
+    <string name="batch_num_text_view">Batch Number</string>
     <string name="title_activity_camera">CameraActivity</string>
     <string name="camera_activity_button">Take a Picture</string>
+    <string name="cargo_num_hint">Input number of cargo</string>
+    <string name="tiltable_checkbox">Tiltable</string>
+    <string name="stackable_checkbox">Stackable</string>
 
     <string name="retry_button">RETRY</string>
     <string name="accept_button">ACCEPT</string>
@@ -13,4 +18,5 @@
 
 
     <string name="main_button">Back to start</string>
+    <string name="continue_button">Continue</string>
 </resources>

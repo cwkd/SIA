@@ -8,44 +8,85 @@
 
     <Button
         android:id="@+id/camera_activity_button"
-        android:text="@string/camera_activity_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_marginRight="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="24dp"
         android:layout_marginLeft="8dp"
-        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="8dp"
+        android:onClick="cameraActivity"
+        android:text="@string/camera_activity_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:onClick="cameraActivity"
-        />
+        app:layout_constraintRight_toRightOf="parent" />
 
-    <Button
-        android:id="@+id/fullscreen_activity_button"
-        android:text="@string/fullscreen_activity_button"
+    <EditText
+        android:id="@+id/cargo_num_edit_text"
+        android:layout_width="125dp"
+        android:layout_height="50dp"
+        android:layout_marginBottom="24dp"
+        android:layout_marginEnd="44dp"
+        app:layout_constraintBottom_toTopOf="@+id/tiltable_check_box"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@+id/tiltable_check_box" />
+
+    <CheckBox
+        android:id="@+id/stackable_check_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginRight="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginLeft="0dp"
-        app:layout_constraintRight_toRightOf="@+id/camera_activity_button"
-        app:layout_constraintLeft_toLeftOf="@+id/camera_activity_button"
-        android:onClick="fullscreenActivity"
+        android:layout_marginBottom="24dp"
+        android:text="@string/stackable_checkbox"
+        app:layout_constraintBottom_toTopOf="@+id/camera_activity_button"
+        app:layout_constraintEnd_toEndOf="@+id/camera_activity_button"
+        app:layout_constraintStart_toStartOf="@+id/camera_activity_button" />
+
+    <CheckBox
+        android:id="@+id/tiltable_check_box"
+        android:layout_width="wrap_content"
+        android:layout_height="28dp"
+        android:layout_marginBottom="24dp"
+        android:text="@string/tiltable_checkbox"
+        app:layout_constraintBottom_toTopOf="@+id/stackable_check_box"
+        app:layout_constraintEnd_toEndOf="@+id/stackable_check_box"
         app:layout_constraintHorizontal_bias="0.0"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/camera_activity_button" />
+        app:layout_constraintStart_toStartOf="@+id/stackable_check_box" />
 
     <TextView
-        android:id="@+id/sample_text"
+        android:id="@+id/cargo_text_view"
+        android:layout_width="125dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="@string/cargo_num_hint"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/cargo_num_edit_text"
+        app:layout_constraintEnd_toStartOf="@+id/cargo_num_edit_text"
+        app:layout_constraintHorizontal_bias="0.629"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/cargo_num_edit_text"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/batch_num_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="0dp"
+        android:layout_marginLeft="0dp"
+        android:text="@string/batch_num_text_view"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/cargo_text_view"
+        app:layout_constraintStart_toStartOf="@+id/cargo_text_view" />
+
+    <EditText
+        android:id="@+id/batch_num_edit_text"
+        android:layout_width="125dp"
+        android:layout_height="40dp"
+        android:layout_marginBottom="16dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        app:layout_constraintBottom_toTopOf="@+id/cargo_num_edit_text"
+        app:layout_constraintEnd_toEndOf="@+id/cargo_num_edit_text" />
 
 </android.support.constraint.ConstraintLayout>
